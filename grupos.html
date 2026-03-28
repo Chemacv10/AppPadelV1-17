@@ -78,6 +78,22 @@
       font-size:18px; font-weight:900; color:var(--texto); line-height:46px;
     }
     .hpick-sep { font-size:20px; font-weight:900; color:var(--sutil); padding:0 2px; }
+    .hpick-wrap { flex:1; position:relative; }
+    .hpick-box { cursor:pointer; }
+    .hpick-box.open { border-color:var(--azul); }
+    .hpick-val { cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; }
+    .hpick-drop {
+      position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:300;
+      background:var(--card); border:2px solid var(--azul); border-radius:12px;
+      box-shadow:0 8px 24px rgba(0,0,0,.13);
+      max-height:190px; overflow-y:auto; display:none;
+    }
+    .hpick-drop.open { display:block; }
+    .hpick-opt {
+      padding:11px 0; font-size:16px; font-weight:800;
+      color:var(--texto); text-align:center; cursor:pointer;
+    }
+    .hpick-opt.sel { color:var(--azul); background:#eff6ff; }
   </style>
 </head>
 <body>
@@ -163,16 +179,22 @@
       <div class="fgrp">
         <div class="flbl">Hora inicio</div>
         <div class="hpick-row">
-          <div class="hpick-box">
-            <button class="hpick-btn" onclick="hpickStep('ini-h',-1)">‹</button>
-            <div class="hpick-val" id="ini-h-val">10</div>
-            <button class="hpick-btn" onclick="hpickStep('ini-h',1)">›</button>
+          <div class="hpick-wrap">
+            <div class="hpick-box" id="ini-h-box">
+              <button class="hpick-btn" onclick="hpickStep('ini-h',-1)">‹</button>
+              <div class="hpick-val" id="ini-h-val" onclick="hpickToggle('ini-h')">10</div>
+              <button class="hpick-btn" onclick="hpickStep('ini-h',1)">›</button>
+            </div>
+            <div class="hpick-drop" id="ini-h-drop"></div>
           </div>
           <div class="hpick-sep">:</div>
-          <div class="hpick-box">
-            <button class="hpick-btn" onclick="hpickStep('ini-m',-1)">‹</button>
-            <div class="hpick-val" id="ini-m-val">00</div>
-            <button class="hpick-btn" onclick="hpickStep('ini-m',1)">›</button>
+          <div class="hpick-wrap">
+            <div class="hpick-box" id="ini-m-box">
+              <button class="hpick-btn" onclick="hpickStep('ini-m',-1)">‹</button>
+              <div class="hpick-val" id="ini-m-val" onclick="hpickToggle('ini-m')">00</div>
+              <button class="hpick-btn" onclick="hpickStep('ini-m',1)">›</button>
+            </div>
+            <div class="hpick-drop" id="ini-m-drop"></div>
           </div>
         </div>
       </div>
@@ -181,16 +203,22 @@
       <div class="fgrp">
         <div class="flbl">Hora fin</div>
         <div class="hpick-row">
-          <div class="hpick-box">
-            <button class="hpick-btn" onclick="hpickStep('fin-h',-1)">‹</button>
-            <div class="hpick-val" id="fin-h-val">11</div>
-            <button class="hpick-btn" onclick="hpickStep('fin-h',1)">›</button>
+          <div class="hpick-wrap">
+            <div class="hpick-box" id="fin-h-box">
+              <button class="hpick-btn" onclick="hpickStep('fin-h',-1)">‹</button>
+              <div class="hpick-val" id="fin-h-val" onclick="hpickToggle('fin-h')">11</div>
+              <button class="hpick-btn" onclick="hpickStep('fin-h',1)">›</button>
+            </div>
+            <div class="hpick-drop" id="fin-h-drop"></div>
           </div>
           <div class="hpick-sep">:</div>
-          <div class="hpick-box">
-            <button class="hpick-btn" onclick="hpickStep('fin-m',-1)">‹</button>
-            <div class="hpick-val" id="fin-m-val">30</div>
-            <button class="hpick-btn" onclick="hpickStep('fin-m',1)">›</button>
+          <div class="hpick-wrap">
+            <div class="hpick-box" id="fin-m-box">
+              <button class="hpick-btn" onclick="hpickStep('fin-m',-1)">‹</button>
+              <div class="hpick-val" id="fin-m-val" onclick="hpickToggle('fin-m')">30</div>
+              <button class="hpick-btn" onclick="hpickStep('fin-m',1)">›</button>
+            </div>
+            <div class="hpick-drop" id="fin-m-drop"></div>
           </div>
         </div>
       </div>
@@ -263,38 +291,82 @@ let _cfgNiveles   = ['Principiante', 'Intermedio', 'Avanzado'];
 
 // ── Hora picker custom ─────────────────────────
 const _hpick = {
-  'ini-h': { val: 10, min: 7,  max: 22, step: 1  },
-  'ini-m': { val: 0,  min: 0,  max: 55, step: 5  },
-  'fin-h': { val: 11, min: 7,  max: 22, step: 1  },
-  'fin-m': { val: 30, min: 0,  max: 55, step: 5  },
+  'ini-h': { val: 10, opts: Array.from({length:24}, (_,i) => i),       step: 1 },
+  'ini-m': { val: 0,  opts: Array.from({length:12}, (_,i) => i * 5),   step: 5 },
+  'fin-h': { val: 11, opts: Array.from({length:24}, (_,i) => i),       step: 1 },
+  'fin-m': { val: 30, opts: Array.from({length:12}, (_,i) => i * 5),   step: 5 },
 };
+
+function _hpickRender(id) {
+  document.getElementById(id + '-val').textContent = String(_hpick[id].val).padStart(2, '0');
+}
 
 function hpickStep(id, dir) {
   const cfg = _hpick[id];
-  cfg.val = cfg.val + dir * cfg.step;
-  if (cfg.val > cfg.max) cfg.val = cfg.min;
-  if (cfg.val < cfg.min) cfg.val = cfg.max;
-  document.getElementById(id + '-val').textContent = String(cfg.val).padStart(2, '0');
+  const idx = cfg.opts.indexOf(cfg.val);
+  cfg.val = cfg.opts[(idx + dir + cfg.opts.length) % cfg.opts.length];
+  _hpickRender(id);
+  // Actualizar sel si el drop está abierto
+  const drop = document.getElementById(id + '-drop');
+  if (drop && drop.classList.contains('open')) {
+    drop.querySelectorAll('.hpick-opt').forEach(o =>
+      o.classList.toggle('sel', Number(o.dataset.v) === cfg.val));
+  }
 }
 
-function buildHoraPickers() { /* no-op: pickers ya están en el HTML */ }
+function hpickToggle(id) {
+  const drop = document.getElementById(id + '-drop');
+  const box  = document.getElementById(id + '-box');
+  const isOpen = drop.classList.contains('open');
+  // Cerrar todos
+  document.querySelectorAll('.hpick-drop').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.hpick-box').forEach(b => b.classList.remove('open'));
+  if (!isOpen) {
+    const cfg = _hpick[id];
+    drop.innerHTML = cfg.opts.map(v =>
+      `<div class="hpick-opt${v === cfg.val ? ' sel' : ''}" data-v="${v}"
+           onclick="hpickPick('${id}',${v})">${String(v).padStart(2,'0')}</div>`
+    ).join('');
+    drop.classList.add('open');
+    box.classList.add('open');
+    setTimeout(() => {
+      const sel = drop.querySelector('.sel');
+      if (sel) sel.scrollIntoView({ block: 'center' });
+    }, 20);
+  }
+}
+
+function hpickPick(id, val) {
+  _hpick[id].val = val;
+  _hpickRender(id);
+  document.getElementById(id + '-drop').classList.remove('open');
+  document.getElementById(id + '-box').classList.remove('open');
+}
+
+function buildHoraPickers() { /* no-op */ }
 
 function getHora(prefijo) {
   const mapId = prefijo === 'gr-inicio' ? 'ini' : 'fin';
-  const h = String(_hpick[mapId + '-h'].val).padStart(2, '0');
-  const m = String(_hpick[mapId + '-m'].val).padStart(2, '0');
-  return `${h}:${m}`;
+  return String(_hpick[mapId+'-h'].val).padStart(2,'0') + ':' + String(_hpick[mapId+'-m'].val).padStart(2,'0');
 }
 
 function setHora(prefijo, horaStr) {
   const mapId = prefijo === 'gr-inicio' ? 'ini' : 'fin';
   if (!horaStr) return;
   const [h, m] = horaStr.split(':').map(Number);
-  _hpick[mapId + '-h'].val = isNaN(h) ? (mapId === 'ini' ? 10 : 11) : Math.max(7, Math.min(22, h));
-  _hpick[mapId + '-m'].val = isNaN(m) ? 0 : Math.round(m / 5) * 5;
-  document.getElementById(mapId + '-h-val').textContent = String(_hpick[mapId + '-h'].val).padStart(2, '0');
-  document.getElementById(mapId + '-m-val').textContent = String(_hpick[mapId + '-m'].val).padStart(2, '0');
+  _hpick[mapId+'-h'].val = isNaN(h) ? (mapId==='ini' ? 10 : 11) : Math.min(23, Math.max(0, h));
+  _hpick[mapId+'-m'].val = isNaN(m) ? 0 : Math.round(m / 5) * 5 % 60;
+  _hpickRender(mapId+'-h');
+  _hpickRender(mapId+'-m');
 }
+
+// Cerrar dropdowns hora al pulsar fuera
+document.addEventListener('click', e => {
+  if (!e.target.closest('.hpick-wrap')) {
+    document.querySelectorAll('.hpick-drop').forEach(d => d.classList.remove('open'));
+    document.querySelectorAll('.hpick-box').forEach(b => b.classList.remove('open'));
+  }
+});
 
 // ── Días chips ────────────────────────────────
 function toggleDia(el) {
