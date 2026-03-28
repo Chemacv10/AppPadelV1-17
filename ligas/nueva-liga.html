@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Nueva liga — LigaPádel</title>
+  <link rel="stylesheet" href="../ligas/css/style.css">
+  <style>
+    /* Wizard steps */
+    .wizard-steps { display:flex; margin-bottom:20px; }
+    .wstep { flex:1; text-align:center; position:relative; }
+    .wstep-circle { width:28px; height:28px; border-radius:50%; border:2px solid #e2e8f0; background:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; color:#94a3b8; margin:0 auto 4px; transition:all .2s; }
+    .wstep.active .wstep-circle { border-color:var(--azul); background:var(--azul); color:#fff; }
+    .wstep.done   .wstep-circle { border-color:var(--verde); background:var(--verde); color:#fff; }
+    .wstep-label { font-size:9px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; }
+    .wstep.active .wstep-label { color:var(--azul); }
+    .wstep.done   .wstep-label { color:var(--verde); }
+    .wstep::after { content:''; position:absolute; top:13px; left:calc(50% + 18px); right:calc(-50% + 18px); height:2px; background:#e2e8f0; }
+    .wstep:last-child::after { display:none; }
+    .wstep.done::after { background:var(--verde); }
+
+    /* Fases del wizard */
+    .fase { display:none; }
+    .fase.active { display:block; }
+
+    /* Selector de semanas */
+    .semana-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; border:1.5px solid #e2e8f0; margin-bottom:7px; cursor:pointer; transition:all .12s; }
+    .semana-item:hover { border-color:#bfdbfe; }
+    .semana-item.sel-jornada   { border-color:var(--azul); background:#eff6ff; }
+    .semana-item.sel-recuperacion { border-color:var(--verde); background:#f0fdf4; }
+    .semana-item.sel-saltar    { border-color:#e2e8f0; background:#f8fafc; opacity:.55; }
+    .semana-tipo-btns { display:flex; gap:4px; margin-left:auto; }
+    .semana-tipo-btn { padding:4px 8px; border-radius:8px; border:1px solid #e2e8f0; background:#fff; font-size:10px; font-weight:800; cursor:pointer; color:#64748b; transition:all .12s; }
+    .semana-tipo-btn.on-j { border-color:var(--azul); background:var(--azul); color:#fff; }
+    .semana-tipo-btn.on-r { border-color:var(--verde); background:var(--verde); color:#fff; }
+    .semana-tipo-btn.on-s { border-color:#94a3b8; background:#f1f5f9; color:#64748b; }
+
+    .contador-semanas { display:flex; gap:10px; margin-bottom:14px; }
+    .cnt-item { flex:1; background:#f8fafc; border-radius:10px; padding:8px; text-align:center; border:1px solid #f1f5f9; }
+    .cnt-v { font-size:18px; font-weight:900; }
+    .cnt-l { font-size:9px; font-weight:800; color:var(--sutil); }
+    .cnt-v.azul { color:var(--azul); }
+    .cnt-v.verde { color:var(--verde); }
+    .cnt-v.rojo  { color:var(--rojo); }
+
+    /* División config */
+    .div-config { border:1.5px solid #e2e8f0; border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+    .div-config-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .div-config-nombre { font-size:13px; font-weight:800; color:var(--texto); }
+
+    /* Material chips */
+    .material-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+    .material-chip { display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:100px; border:1.5px solid #e2e8f0; font-size:11px; font-weight:800; cursor:pointer; color:#64748b; background:#fff; }
+    .material-chip.on { border-color:var(--azul); background:#eff6ff; color:var(--azul); }
+    .material-chip-x { font-size:14px; font-weight:900; color:var(--rojo); margin-left:2px; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div id="header-container"></div>
+  <nav id="nav-container"></nav>
+
+  <main class="content">
+
+    <!-- Wizard steps -->
+    <div class="wizard-steps" id="wizard-steps">
+      <div class="wstep active" id="ws-1"><div class="wstep-circle">1</div><div class="wstep-label">Datos</div></div>
+      <div class="wstep"        id="ws-2"><div class="wstep-circle">2</div><div class="wstep-label">Divisiones</div></div>
+      <div class="wstep" id="ws-3" style="display:none"><div class="wstep-circle">3</div><div class="wstep-label">Semanas</div></div>
+      <div class="wstep" id="ws-4" style="display:none"><div class="wstep-circle">4</div><div class="wstep-label">Normativa</div></div>
+    </div>
+
+    <!-- ─── FASE 1: Datos generales ─── -->
+    <div class="fase active" id="fase-1">
+
+      <!-- Club / Organización -->
+      <div style="font-size:10px;font-weight:900;color:var(--sutil);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Club / Organización</div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;background:#f8fafc;border-radius:14px;padding:12px;border:1.5px solid var(--borde)">
+        <!-- Logo -->
+        <div id="f1-logo-wrap" onclick="document.getElementById('f1-logo-input').click()"
+             style="width:60px;height:60px;border-radius:12px;border:2px dashed var(--borde);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .15s">
+          <img id="f1-logo-preview" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:10px">
+          <div id="f1-logo-placeholder" style="text-align:center">
+            <div style="font-size:20px">🖼</div>
+            <div style="font-size:8px;font-weight:800;color:var(--sutil);margin-top:2px">LOGO</div>
+          </div>
+          <input type="file" id="f1-logo-input" accept="image/*" style="display:none" onchange="f1LogoPreview(this)">
+        </div>
+        <!-- Nombre club -->
+        <div style="flex:1;min-width:0">
+          <div class="flbl">Nombre del club / organizador</div>
+          <input class="finp" id="f1-club-nombre" placeholder="Ej: Club Pádel Tomares" style="margin-top:4px">
+          <div id="f1-logo-estado" style="font-size:10px;font-weight:700;color:var(--sutil);margin-top:4px"></div>
+        </div>
+      </div>
+
+      <div class="fgrp">
+        <div class="flbl">Nombre de la liga *</div>
+        <input class="finp" id="f1-nombre" placeholder="Ej: Liga Masculina 2025/26">
+      </div>
+      <div class="frow">
+        <div class="fgrp">
+          <div class="flbl">Categoría</div>
+          <div class="csel-wrap" id="f1-categoria-csel"></div>
+        </div>
+        <div class="fgrp">
+          <div class="flbl">Edad</div>
+          <div class="csel-wrap" id="f1-edad-csel"></div>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fgrp">
+          <div class="flbl">Temporada</div>
+          <input class="finp" id="f1-temporada" placeholder="Ej: 2025/26">
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fgrp">
+          <div class="flbl">Formato</div>
+          <div class="csel-wrap" id="f1-formato-csel"></div>
+        </div>
+        <div class="fgrp">
+          <div class="flbl">Sets por partido</div>
+          <div class="csel-wrap" id="f1-sets-csel"></div>
+        </div>
+      </div>
+
+      <!-- Puntuación (solo round-robin) -->
+      <div id="wrap-puntuacion">
+        <div style="font-size:10px;font-weight:900;color:var(--sutil);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 8px">Sistema de puntuación</div>
+        <div class="frow">
+          <div class="fgrp"><div class="flbl">Victoria</div><input class="finp" id="f1-pts-v" type="number" value="2"></div>
+          <div class="fgrp"><div class="flbl">Derrota</div><input class="finp" id="f1-pts-d" type="number" value="1"></div>
+          <div class="fgrp"><div class="flbl">WO/Incomp.</div><input class="finp" id="f1-pts-wo" type="number" value="0"></div>
+        </div>
+        <div class="frow">
+          <div class="fgrp"><div class="flbl">Pts presente en WO</div><input class="finp" id="f1-pts-pres" type="number" value="2"></div>
+          <div class="fgrp"><div class="flbl">Aplazamientos máx.</div><input class="finp" id="f1-aplaz" type="number" value="5"></div>
+        </div>
+      </div>
+
+      <div class="frow">
+        <div class="fgrp">
+          <div class="flbl">Cuota inscripción (€)</div>
+          <input class="finp" id="f1-cuota" type="number" placeholder="0" step="0.50">
+        </div>
+        <div class="fgrp">
+          <div class="flbl">Duración partido (min)</div>
+          <input class="finp" id="f1-duracion" type="number" value="90" min="30" max="240">
+        </div>
+      </div>
+
+      <div class="fgrp">
+        <div class="flbl">Ida y vuelta</div>
+        <div style="display:flex;gap:8px">
+          <button type="button" id="btn-ida-no"  onclick="setIdaVuelta(false)"
+            style="flex:1;padding:9px;border-radius:12px;border:1.5px solid var(--azul);background:#eff6ff;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--azul)">
+            Solo ida
+          </button>
+          <button type="button" id="btn-ida-si" onclick="setIdaVuelta(true)"
+            style="flex:1;padding:9px;border-radius:12px;border:1.5px solid var(--borde);background:#fff;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--sutil)">
+            Ida y vuelta
+          </button>
+        </div>
+        <input type="hidden" id="f1-ida-vuelta" value="false">
+      </div>
+
+      <div class="fgrp">
+        <div class="flbl">URL pública</div>
+        <input class="finp" id="f1-url" placeholder="liga-masc-2526" oninput="sanitizarUrl(this)">
+      </div>
+
+      <div class="sheet-btns" style="margin-top:16px">
+        <button class="sbtn" onclick="window.location.href='index.html'">Cancelar</button>
+        <button class="sbtn prim" onclick="irFase(2)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- ─── FASE 2: Divisiones ─── -->
+    <div class="fase" id="fase-2">
+      <div style="font-size:12px;font-weight:600;color:var(--sutil);margin-bottom:14px;line-height:1.5">
+        Define las divisiones. Puedes tener solo una (liga única) o varias con reglas de ascenso/descenso.
+      </div>
+      <div id="divisiones-lista"></div>
+      <button class="btn" style="width:100%;margin-bottom:7px" onclick="addDivision()">+ Añadir división</button>
+      <div class="sheet-btns" style="margin-top:8px">
+        <button class="sbtn" onclick="irFase(1)">← Atrás</button>
+        <button class="sbtn prim" id="btn-crear" onclick="crearLiga()">✓ Crear liga</button>
+      </div>
+    </div>
+
+    <!-- ─── FASE 3: Selector de semanas ─── -->
+    <div class="fase" id="fase-3">
+      <div style="font-size:12px;font-weight:600;color:var(--sutil);margin-bottom:14px;line-height:1.5">
+        Selecciona las semanas del período. Marca cada una como <strong>Jornada</strong>, <strong>Recuperación</strong> o déjala <strong>libre</strong> (festivos, Navidad...).
+      </div>
+
+      <div class="frow" style="margin-bottom:14px">
+        <div class="fgrp">
+          <div class="flbl">Período — Inicio</div>
+          <input class="finp" id="f3-ini" type="date" onchange="generarSemanas()">
+        </div>
+        <div class="fgrp">
+          <div class="flbl">Período — Fin</div>
+          <input class="finp" id="f3-fin" type="date" onchange="generarSemanas()">
+        </div>
+      </div>
+
+      <div class="contador-semanas" id="contador-semanas" style="display:none">
+        <div class="cnt-item"><div class="cnt-v azul" id="cnt-jornadas">0</div><div class="cnt-l">Jornadas ✓</div></div>
+        <div class="cnt-item"><div class="cnt-v verde" id="cnt-recuperacion">0</div><div class="cnt-l">Recup. ✓</div></div>
+        <div class="cnt-item"><div class="cnt-v" id="cnt-necesarias" style="color:var(--sutil)">—</div><div class="cnt-l">Necesarias</div></div>
+      </div>
+
+      <div id="semanas-lista"></div>
+
+      <div class="sheet-btns" style="margin-top:8px">
+        <button class="sbtn" onclick="irFase(2)">← Atrás</button>
+        <button class="sbtn prim" onclick="irFase(4)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- ─── FASE 4: Normativa ─── -->
+    <div class="fase" id="fase-4">
+      <div class="fgrp">
+        <div class="flbl">Título del reglamento</div>
+        <input class="finp" id="f4-titulo" placeholder="Ej: Liga Pádel Club Sevilla 2025-26">
+      </div>
+      <div class="fgrp">
+        <div class="flbl">Horario de juego</div>
+        <input class="finp" id="f4-horario" placeholder="Ej: Vie 17-22h · Sáb 10-21h · Dom 10-21h">
+      </div>
+      <div class="frow">
+        <div class="fgrp">
+          <div class="flbl">Aplazam. máx. por jugador</div>
+          <input class="finp" id="f4-aplaz" type="number" value="5">
+        </div>
+        <div class="fgrp">
+          <div class="flbl">WO tras (min retraso)</div>
+          <input class="finp" id="f4-wo-min" type="number" value="15">
+        </div>
+      </div>
+      <div class="fgrp">
+        <div class="flbl">Texto de normativa</div>
+        <textarea class="finp" id="f4-texto" rows="5" style="resize:none;line-height:1.5"
+          placeholder="Todo participante acepta y respeta la presente Normativa. En caso de duda prevalecerá el criterio de la Organización…"></textarea>
+      </div>
+
+      <div style="font-size:10px;font-weight:900;color:var(--sutil);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 8px">Premios — 1ª División</div>
+      <div class="frow">
+        <div class="fgrp"><div class="flbl">1º clasificado</div><input class="finp" id="f4-p1" placeholder="Trofeo + 150€"></div>
+        <div class="fgrp"><div class="flbl">2º clasificado</div><input class="finp" id="f4-p2" placeholder="Trofeo + 100€"></div>
+        <div class="fgrp"><div class="flbl">3º clasificado</div><input class="finp" id="f4-p3" placeholder="Trofeo + 80€"></div>
+      </div>
+
+      <div class="sheet-btns" style="margin-top:16px">
+        <button class="sbtn" onclick="irFase(3)">← Atrás</button>
+        <button class="sbtn prim" id="btn-crear" onclick="crearLiga()">✓ Crear liga</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/config.js"></script>
+<script src="../ligas/js/store-liga.js"></script>
+<script src="../ligas/js/ui.js"></script>
+<script>
+
+let _faseActual = 1;
+let _divisiones = []; // array de { nombre, orden, ascienden_directo, ascienden_playoff, descienden, tiene_playoff, playoff_clasificados }
+let _semanas    = []; // array de { ini, fin, label, tipo: 'jornada'|'recuperacion'|'libre' }
+let _material   = []; // array de strings
+
+// ── Navegación wizard ─────────────────────────────────────────
+function irFase(n) {
+  if (n > _faseActual) {
+    if (!validarFase(_faseActual)) return;
+  }
+  document.querySelector('.fase.active')?.classList.remove('active');
+  document.getElementById('fase-' + n).classList.add('active');
+
+  // Steps
+  for (let i = 1; i <= 4; i++) {
+    const ws = document.getElementById('ws-' + i);
+    ws.className = 'wstep' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+  _faseActual = n;
+  window.scrollTo(0, 0);
+
+  if (n === 2) renderDivisiones();
+  if (n === 3) sincronizarAplazFase4();
+}
+
+function validarFase(n) {
+  if (n === 1) {
+    if (!document.getElementById('f1-nombre').value.trim()) {
+      toast('Escribe el nombre de la liga', 'warn'); return false;
+    }
+  }
+  if (n === 2) {
+    if (!_divisiones.length) {
+      toast('Añade al menos una división', 'warn'); return false;
+    }
+  }
+  if (n === 3) {
+    const jornadas = _semanas.filter(s => s.tipo === 'jornada').length;
+    if (!jornadas) {
+      toast('Selecciona al menos una jornada', 'warn'); return false;
+    }
+  }
+  return true;
+}
+
+// ── Fase 1: formato ───────────────────────────────────────────
+function onCambioFormato() {
+  const fmt = document.getElementById('f1-formato').value;
+  document.getElementById('wrap-puntuacion').style.display = fmt === 'americano' ? 'none' : 'block';
+}
+
+function setIdaVuelta(val) {
+  document.getElementById('f1-ida-vuelta').value = val;
+  document.getElementById('btn-ida-no').style.cssText  += val ? ';background:#fff;border-color:var(--borde);color:var(--sutil)' : ';background:#eff6ff;border-color:var(--azul);color:var(--azul)';
+  document.getElementById('btn-ida-si').style.cssText  += val ? ';background:#eff6ff;border-color:var(--azul);color:var(--azul)' : ';background:#fff;border-color:var(--borde);color:var(--sutil)';
+}
+
+function sanitizarUrl(inp) {
+  inp.value = inp.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+}
+
+// ── Material ──────────────────────────────────────────────────
+function togMaterial(el, nombre) {
+  el.classList.toggle('on');
+  if (el.classList.contains('on')) {
+    if (!_material.includes(nombre)) _material.push(nombre);
+  } else {
+    _material = _material.filter(m => m !== nombre);
+  }
+}
+
+function addMaterial() {
+  const inp = document.getElementById('nuevo-material-inp');
+  const val = inp.value.trim();
+  if (!val) { inp.focus(); return; }
+  if (!_material.includes(val)) {
+    _material.push(val);
+    const chip = document.createElement('div');
+    chip.className = 'material-chip on';
+    chip.textContent = val;
+    chip.dataset.nombre = val;
+    chip.onclick = () => togMaterial(chip, val);
+    document.getElementById('material-chips').appendChild(chip);
+  }
+  inp.value = '';
+  inp.focus();
+}
+
+// ── Fase 2: divisiones ────────────────────────────────────────
+function renderDivisiones() {
+  if (!_divisiones.length) {
+    // Inicializar con una división por defecto
+    _divisiones = [{ nombre:'1ª División', orden:1, ascienden_directo:0, ascienden_playoff:0, descienden:0, tiene_playoff:false, playoff_clasificados:8 }];
+  }
+  const el = document.getElementById('divisiones-lista');
+  el.innerHTML = _divisiones.map((d, i) => `
+    <div class="div-config">
+      <div class="div-config-header">
+        <input class="finp" value="${d.nombre}" style="font-size:13px;font-weight:800;flex:1;margin-right:8px"
+          onchange="_divisiones[${i}].nombre=this.value">
+        ${_divisiones.length > 1 ? `<button onclick="elimDivision(${i})" style="background:none;border:none;color:var(--rojo);font-size:18px;cursor:pointer;padding:0">×</button>` : ''}
+      </div>
+      <div class="frow">
+        <div class="fgrp">
+          <div class="flbl">Ascienden directo</div>
+          <input class="finp" type="number" value="${d.ascienden_directo}" min="0"
+            onchange="_divisiones[${i}].ascienden_directo=+this.value">
+        </div>
+        <div class="fgrp">
+          <div class="flbl">Ascienden play-off</div>
+          <input class="finp" type="number" value="${d.ascienden_playoff}" min="0"
+            onchange="_divisiones[${i}].ascienden_playoff=+this.value">
+        </div>
+        <div class="fgrp">
+          <div class="flbl">Descienden</div>
+          <input class="finp" type="number" value="${d.descienden}" min="0"
+            onchange="_divisiones[${i}].descienden=+this.value">
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <input type="checkbox" id="playoff-${i}" ${d.tiene_playoff?'checked':''} onchange="_divisiones[${i}].tiene_playoff=this.checked;renderDivisiones()" style="accent-color:var(--azul)">
+        <label for="playoff-${i}" style="font-size:12px;font-weight:700;color:var(--texto);cursor:pointer">Fase final / play-off</label>
+        ${d.tiene_playoff ? `
+        <input class="finp" type="number" value="${d.playoff_clasificados}" min="2" max="16" style="max-width:60px;margin-left:8px"
+          onchange="_divisiones[${i}].playoff_clasificados=+this.value">
+        <span style="font-size:11px;font-weight:600;color:var(--sutil)">clasificados</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function addDivision() {
+  const n = _divisiones.length + 1;
+  _divisiones.push({ nombre:`${n}ª División`, orden:n, ascienden_directo:0, ascienden_playoff:0, descienden:0, tiene_playoff:false, playoff_clasificados:8 });
+  renderDivisiones();
+}
+
+function elimDivision(i) {
+  _divisiones.splice(i, 1);
+  _divisiones.forEach((d, idx) => d.orden = idx + 1);
+  renderDivisiones();
+}
+
+// ── Fase 3: selector de semanas ───────────────────────────────
+function generarSemanas() {
+  const iniStr = document.getElementById('f3-ini').value;
+  const finStr = document.getElementById('f3-fin').value;
+  if (!iniStr || !finStr) return;
+
+  const semanas = lpGetSemanas(iniStr, finStr);
+  _semanas = semanas.map(s => ({ ...s, tipo: 'libre' }));
+  renderSemanas();
+}
+
+// Festivos conocidos España (mes-día)
+const _FESTIVOS_ES = ['01-01','01-06','05-01','08-15','10-12','11-01','12-06','12-08','12-25'];
+function esFestivo(date) {
+  const md = (date.getMonth()+1).toString().padStart(2,'0') + '-' + date.getDate().toString().padStart(2,'0');
+  return _FESTIVOS_ES.includes(md);
+}
+
+function renderSemanas() {
+  const el = document.getElementById('semanas-lista');
+  if (!_semanas.length) { el.innerHTML = ''; document.getElementById('contador-semanas').style.display = 'none'; return; }
+
+  document.getElementById('contador-semanas').style.display = 'flex';
+  actualizarContador();
+
+  let numJ = 0, numR = 0;
+  el.innerHTML = _semanas.map((s, i) => {
+    const esFest = esFestivo(s.ini) || esFestivo(s.fin);
+    if (s.tipo === 'jornada') numJ++;
+    else if (s.tipo === 'recuperacion') numR++;
+
+    const numLabel = s.tipo === 'jornada'
+      ? `<span style="font-size:11px;font-weight:900;color:var(--azul)">J${numJ}</span>`
+      : s.tipo === 'recuperacion'
+        ? `<span style="font-size:11px;font-weight:900;color:var(--verde)">R${numR}</span>`
+        : `<span style="font-size:11px;font-weight:700;color:#94a3b8">—</span>`;
+
+    const festBadge = esFest
+      ? `<span style="font-size:9px;font-weight:800;color:#dc2626;background:#fee2e2;border-radius:6px;padding:1px 5px;margin-left:4px">Festivo</span>`
+      : '';
+
+    const bordeColor = s.tipo === 'jornada' ? 'var(--azul)' : s.tipo === 'recuperacion' ? 'var(--verde)' : esFest ? '#fca5a5' : '#e2e8f0';
+    const bgColor    = s.tipo === 'jornada' ? '#eff6ff' : s.tipo === 'recuperacion' ? '#f0fdf4' : esFest ? '#fff5f5' : '#f8fafc';
+
+    return `<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;border:1.5px solid ${bordeColor};background:${bgColor};margin-bottom:6px">
+      <div style="min-width:28px;text-align:center">${numLabel}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:800;color:var(--texto);display:flex;align-items:center;flex-wrap:wrap;gap:2px">
+          ${s.label}${festBadge}
+        </div>
+      </div>
+      <div style="display:flex;gap:3px;flex-shrink:0">
+        <button style="padding:4px 7px;border-radius:7px;border:1.5px solid ${s.tipo==='jornada'?'var(--azul)':'#e2e8f0'};background:${s.tipo==='jornada'?'var(--azul)':'#fff'};color:${s.tipo==='jornada'?'#fff':'#64748b'};font-size:10px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif" onclick="setSemana(${i},'jornada')">J</button>
+        <button style="padding:4px 7px;border-radius:7px;border:1.5px solid ${s.tipo==='recuperacion'?'var(--verde)':'#e2e8f0'};background:${s.tipo==='recuperacion'?'var(--verde)':'#fff'};color:${s.tipo==='recuperacion'?'#fff':'#64748b'};font-size:10px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif" onclick="setSemana(${i},'recuperacion')">R</button>
+        <button style="padding:4px 7px;border-radius:7px;border:1.5px solid ${s.tipo==='libre'?'#94a3b8':'#e2e8f0'};background:${s.tipo==='libre'?'#f1f5f9':'#fff'};color:#64748b;font-size:10px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif" onclick="setSemana(${i},'libre')">Libre</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setSemana(i, tipo) {
+  _semanas[i].tipo = tipo;
+  renderSemanas();
+}
+
+function actualizarContador() {
+  const nJ = _semanas.filter(s => s.tipo === 'jornada').length;
+  const nR = _semanas.filter(s => s.tipo === 'recuperacion').length;
+  // Calcular necesarias según parejas de todas las divisiones
+  const maxParejas = Math.max(..._divisiones.map(d => {
+    return _semanas.length; // fallback — se refinará al tener parejas reales
+  }), 0);
+  const necesarias = _divisiones.length
+    ? _divisiones.reduce((max, d) => Math.max(max, d.numParejas || 0), 0)
+    : 0;
+  const jornadasNecesarias = necesarias > 1 ? necesarias - 1 : null;
+
+  document.getElementById('cnt-jornadas').textContent     = nJ;
+  document.getElementById('cnt-recuperacion').textContent  = nR;
+  document.getElementById('cnt-necesarias').textContent   = jornadasNecesarias || '—';
+
+  // Color del contador jornadas según si cubre lo necesario
+  const cntEl = document.getElementById('cnt-jornadas');
+  if (jornadasNecesarias) {
+    cntEl.style.color = nJ >= jornadasNecesarias ? 'var(--verde)' : 'var(--azul)';
+  }
+}
+
+function sincronizarAplazFase4() {
+  const aplaz = document.getElementById('f1-aplaz').value;
+  document.getElementById('f4-aplaz').value = aplaz;
+}
+
+// ── Logo club ──────────────────────────────────────────────────
+let _logoFile = null;
+
+function f1LogoPreview(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('Solo imágenes', 'warn'); return; }
+  if (file.size > 3 * 1024 * 1024) { toast('Imagen máx. 3 MB', 'warn'); return; }
+  _logoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('f1-logo-preview').src = e.target.result;
+    document.getElementById('f1-logo-preview').style.display = 'block';
+    document.getElementById('f1-logo-placeholder').style.display = 'none';
+    document.getElementById('f1-logo-wrap').style.borderStyle = 'solid';
+    document.getElementById('f1-logo-wrap').style.borderColor = 'var(--verde)';
+    document.getElementById('f1-logo-estado').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function subirLogo(ligaId) {
+  if (!_logoFile) return null;
+  const ext  = _logoFile.name.split('.').pop().toLowerCase() || 'jpg';
+  const path = `${LP.orgId}/${ligaId}/logo.${ext}`;
+  const { error } = await _sb.storage.from('logos').upload(path, _logoFile, { upsert: true, contentType: _logoFile.type });
+  if (error) throw error;
+  const { data } = _sb.storage.from('logos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ── Crear liga ─────────────────────────────────────────────────
+async function crearLiga() {
+  const btn = document.getElementById('btn-crear');
+  btn.disabled = true;
+  btn.textContent = 'Creando…';
+
+  try {
+    // 1. Crear la liga
+    // Crear la liga primero (sin logo aún, para tener el id)
+    const liga = await lpSaveLiga({
+      nombre:     document.getElementById('f1-nombre').value.trim(),
+      club_nombre: document.getElementById('f1-club-nombre').value.trim() || null,
+      categoria:  cselGetValue('f1-categoria-csel'),
+      categoria_edad: cselGetValue('f1-edad-csel'),
+      temporada:  document.getElementById('f1-temporada').value.trim() || null,
+      formato:    cselGetValue('f1-formato-csel') === 'Americano' ? 'americano' : 'round_robin',
+      sets_partido: cselGetValue('f1-sets-csel'),
+      ida_vuelta: document.getElementById('f1-ida-vuelta').value === 'true',
+      duracion_partido: parseInt(document.getElementById('f1-duracion').value) || 90,
+      pts_victoria:    parseInt(document.getElementById('f1-pts-v').value)    || 2,
+      pts_derrota:     parseInt(document.getElementById('f1-pts-d').value)    || 1,
+      pts_wo:          parseInt(document.getElementById('f1-pts-wo').value)   || 0,
+      pts_incomp_presente: parseInt(document.getElementById('f1-pts-pres').value) || 2,
+      aplazamientos_max: parseInt(document.getElementById('f1-aplaz').value) || 5,
+      cuota:        parseFloat(document.getElementById('f1-cuota').value)    || 0,
+      url_publica:  document.getElementById('f1-url').value.trim() || null,
+      material_entrega: _material,
+      estado:       'inscripcion',
+    });
+
+    // Subir logo si hay uno seleccionado
+    if (_logoFile) {
+      try {
+        const logoUrl = await subirLogo(liga.id);
+        if (logoUrl) await lpSaveLiga({ id: liga.id, club_logo_url: logoUrl });
+      } catch(e) { console.warn('Logo no subido:', e); }
+    }
+
+    // 2. Crear divisiones
+    await Promise.all(_divisiones.map((d, i) =>
+      lpSaveDivision({
+        liga_id: liga.id,
+        nombre:  d.nombre,
+        orden:   i + 1,
+        ascienden_directo:   d.ascienden_directo,
+        ascienden_playoff:   d.ascienden_playoff,
+        descienden:          d.descienden,
+        tiene_playoff:       d.tiene_playoff,
+        playoff_clasificados: d.playoff_clasificados,
+      })
+    ));
+
+    // 3. Crear jornadas
+    const jornadasData = [];
+    let numJornada = 1, numRecuperacion = 1;
+    for (const s of _semanas) {
+      if (s.tipo === 'libre') continue;
+      jornadasData.push({
+        liga_id:    liga.id,
+        numero:     s.tipo === 'jornada' ? numJornada++ : numRecuperacion++,
+        tipo:       s.tipo,
+        fecha_ini:  lpDateToISO(s.ini),
+        fecha_fin:  lpDateToISO(s.fin),
+        estado:     'pendiente',
+        notas:      null,
+      });
+    }
+    if (jornadasData.length) await lpSaveJornadasLote(jornadasData);
+
+    // 4. Crear normativa
+    const normTitulo = document.getElementById('f4-titulo').value.trim();
+    if (normTitulo || document.getElementById('f4-texto').value.trim()) {
+      await lpSaveNormativa({
+        liga_id:      liga.id,
+        titulo:       normTitulo || liga.nombre,
+        horario_juego: document.getElementById('f4-horario').value.trim() || null,
+        texto_libre:  document.getElementById('f4-texto').value.trim() || null,
+        premios: {
+          '1ª División': {
+            '1º': document.getElementById('f4-p1').value.trim(),
+            '2º': document.getElementById('f4-p2').value.trim(),
+            '3º': document.getElementById('f4-p3').value.trim(),
+          }
+        },
+      });
+    }
+
+    toast('✓ Liga creada', 'ok');
+    setTimeout(() => {
+      window.location.href = `liga.html?id=${liga.id}`;
+    }, 800);
+
+  } catch(e) {
+    console.error(e);
+    toast('Error al crear: ' + (e.message || JSON.stringify(e)), 'err');
+    btn.disabled = false;
+    btn.textContent = '✓ Crear liga';
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────
+async function init() {
+  const params  = new URLSearchParams(location.search);
+  const editId  = params.get('edit');
+  const modoEdicion = !!editId;
+
+  renderHeader({ titulo:'LigaPádel', subtitulo: modoEdicion ? 'Editar liga' : 'Nueva liga', icono:'icons/ligas.png', botonDerecho: modoEdicion ? 'back' : null, onBack: modoEdicion ? `liga.html?id=${editId}` : null });
+  renderNav('ligas');
+  const ok = await lpInit(); if (!ok) return;
+
+  // Inicializar csel de categoría y edad
+  const _cfgCategorias = ['Masculina','Femenina','Mixta'];
+  const _cfgEdades = ['Absoluto','Benjamín','Alevín','Infantil','Cadete','Juvenil','Veteranos +35','Veteranos +45','Veteranos +55'];
+  const _cfgFormatos = ['Round-Robin','Americano'];
+  const _cfgSets = ['Mejor de 3 + STB','Mejor de 3','Pro-set 10 games'];
+
+  cselRender('f1-categoria-csel', _cfgCategorias, 'Masculina', null, null,
+    (val, ops) => {}, (val, ops) => {}, '+ Añadir categoría…');
+  cselRender('f1-edad-csel', _cfgEdades, 'Absoluto', null, null,
+    (val, ops) => {}, (val, ops) => {}, '+ Añadir edad…');
+  cselRender('f1-formato-csel', _cfgFormatos, 'Round-Robin', null,
+    (val) => { document.getElementById('wrap-puntuacion').style.display = val === 'Americano' ? 'none' : 'block'; },
+    (val, ops) => {}, (val, ops) => {}, '+ Añadir formato…');
+  cselRender('f1-sets-csel', _cfgSets, 'Mejor de 3 + STB', null, null,
+    (val, ops) => {}, (val, ops) => {}, '+ Añadir formato sets…');
+
+  // Fecha sugerida por defecto
+  const hoy = new Date();
+  const ini = new Date(hoy); ini.setDate(ini.getDate() + 7);
+  const fin = new Date(hoy); fin.setMonth(fin.getMonth() + 7);
+  document.getElementById('f3-ini').value = lpDateToISO(ini);
+  document.getElementById('f3-fin').value = lpDateToISO(fin);
+  generarSemanas();
+
+  // ── Modo edición: cargar datos de la liga existente ──
+  if (modoEdicion) {
+    try {
+      const liga = await lpGetLiga(editId);
+      // Cambiar botón crear → guardar
+      const btn = document.getElementById('btn-crear');
+      btn.textContent = '✓ Guardar cambios';
+      btn.onclick = () => guardarEdicion(editId);
+
+      // Paso 1 — datos básicos
+      document.getElementById('f1-nombre').value    = liga.nombre || '';
+      document.getElementById('f1-temporada').value = liga.temporada || '';
+      document.getElementById('f1-duracion').value  = liga.duracion_partido || 90;
+      document.getElementById('f1-pts-v').value     = liga.pts_victoria ?? 2;
+      document.getElementById('f1-pts-d').value     = liga.pts_derrota ?? 1;
+      document.getElementById('f1-pts-wo').value    = liga.pts_wo ?? 0;
+      document.getElementById('f1-pts-pres').value  = liga.pts_incomp_presente ?? 2;
+      document.getElementById('f1-aplaz').value     = liga.aplazamientos_max ?? 5;
+      document.getElementById('f1-url').value       = liga.url_publica || '';
+      document.getElementById('f1-cuota').value     = liga.cuota_inscripcion || '';
+      document.getElementById('f1-ida-vuelta').value = liga.ida_vuelta ? 'true' : 'false';
+
+      // Club nombre y logo
+      document.getElementById('f1-club-nombre').value = liga.club_nombre || '';
+      if (liga.club_logo_url) {
+        document.getElementById('f1-logo-preview').src = liga.club_logo_url;
+        document.getElementById('f1-logo-preview').style.display = 'block';
+        document.getElementById('f1-logo-placeholder').style.display = 'none';
+        document.getElementById('f1-logo-wrap').style.borderStyle = 'solid';
+        document.getElementById('f1-logo-wrap').style.borderColor = 'var(--verde)';
+        document.getElementById('f1-logo-estado').textContent = 'Logo guardado ✓';
+      }
+
+      // Actualizar botones visuales ida/vuelta
+      document.querySelectorAll('.ida-btn').forEach(b => b.classList.toggle('on', b.dataset.val === (liga.ida_vuelta ? 'true' : 'false')));
+
+      // Selectores csel
+      const formatoLabel = liga.formato === 'americano' ? 'Americano' : 'Round-Robin';
+      cselSetValue('f1-categoria-csel', liga.categoria || 'Masculina');
+      cselSetValue('f1-edad-csel',      liga.categoria_edad || 'Absoluto');
+      cselSetValue('f1-formato-csel',   formatoLabel);
+      // sets_partido viene en formato BD, mapear a label
+      const setsMap = { 'mejor_3_stb':'Mejor de 3 + STB', 'mejor_3':'Mejor de 3', '1':'Pro-set 10 games', 'mejor_3':'Mejor de 3' };
+      cselSetValue('f1-sets-csel', setsMap[liga.sets_partido] || liga.sets_partido || 'Mejor de 3 + STB');
+
+      document.getElementById('wrap-puntuacion').style.display = liga.formato === 'americano' ? 'none' : 'block';
+
+      // Ocultar wizard de pasos y fases 2/3/4 — en edición solo se modifican datos básicos
+      document.getElementById('wizard-steps').style.display = 'none';
+      document.getElementById('fase-2').style.display = 'none';
+      document.getElementById('fase-3').style.display = 'none';
+      document.getElementById('fase-4').style.display = 'none';
+      // Mover botón guardar al paso 1 directamente
+      const btnFase1 = document.querySelector('#fase-1 .sheet-btns');
+      if (btnFase1) {
+        btnFase1.innerHTML = `<button class="sbtn prim" id="btn-crear" style="flex:1" onclick="guardarEdicion('${editId}')">✓ Guardar cambios</button>`;
+      }
+    } catch(e) {
+      toast('Error al cargar la liga: ' + (e.message || e), 'err');
+      console.error(e);
+    }
+  }
+}
+
+// ── Guardar edición (solo campos básicos, sin tocar divisiones/jornadas) ──
+async function guardarEdicion(ligaId) {
+  const btn = document.getElementById('btn-crear');
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+  try {
+    const formatoVal = cselGetValue('f1-formato-csel') === 'Americano' ? 'americano' : 'round_robin';
+    const setsVal = cselGetValue('f1-sets-csel');
+    const setsMap = { 'Mejor de 3 + STB':'mejor_3_stb', 'Mejor de 3':'mejor_3', 'Pro-set 10 games':'1' };
+    // Subir logo si hay uno nuevo
+    let logoUrl = null;
+    if (_logoFile) {
+      try { logoUrl = await subirLogo(ligaId); } catch(e) { console.warn('Logo no subido:', e); }
+    }
+    await lpSaveLiga({
+      id: ligaId,
+      nombre:     document.getElementById('f1-nombre').value.trim(),
+      club_nombre: document.getElementById('f1-club-nombre').value.trim() || null,
+      ...(logoUrl ? { club_logo_url: logoUrl } : {}),
+      categoria:  cselGetValue('f1-categoria-csel'),
+      categoria_edad: cselGetValue('f1-edad-csel'),
+      temporada:  document.getElementById('f1-temporada').value.trim() || null,
+      formato:    formatoVal,
+      sets_partido: setsMap[setsVal] || setsVal,
+      ida_vuelta: document.getElementById('f1-ida-vuelta').value === 'true',
+      duracion_partido: parseInt(document.getElementById('f1-duracion').value) || 90,
+      pts_victoria:    parseInt(document.getElementById('f1-pts-v').value)    || 2,
+      pts_derrota:     parseInt(document.getElementById('f1-pts-d').value)    || 1,
+      pts_wo:          parseInt(document.getElementById('f1-pts-wo').value)   || 0,
+      pts_incomp_presente: parseInt(document.getElementById('f1-pts-pres').value) || 2,
+      aplazamientos_max: parseInt(document.getElementById('f1-aplaz').value) || 5,
+      cuota_inscripcion: parseFloat(document.getElementById('f1-cuota').value) || null,
+      url_publica:  document.getElementById('f1-url').value.trim() || null,
+    });
+    toast('✓ Liga actualizada', 'ok');
+    setTimeout(() => { window.location.href = `liga.html?id=${ligaId}`; }, 600);
+  } catch(e) {
+    toast('Error al guardar: ' + (e.message || e), 'err');
+    btn.disabled = false;
+    btn.textContent = '✓ Guardar cambios';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

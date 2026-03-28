@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Inicio — LigaPádel</title>
+  <link rel="stylesheet" href="../ligas/css/style.css">
+</head>
+<body>
+<div class="page">
+  <div id="header-container"></div>
+  <nav id="nav-container"></nav>
+  <main style="overflow-y:auto;flex:1;padding:14px;padding-bottom:80px">
+
+    <div id="alertas-wrap" style="margin-bottom:10px"></div>
+
+    <!-- Accesos rápidos -->
+    <div class="sec-label" style="margin-bottom:8px">Accesos rápidos</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <a href="../ligas/index.html" style="text-decoration:none">
+        <div style="background:#fff;border:1.5px solid var(--borde);border-radius:14px;padding:14px 12px;text-align:center">
+          <div style="font-size:28px;margin-bottom:5px">🏆</div>
+          <div style="font-size:12px;font-weight:800;color:var(--texto)">Ligas</div>
+        </div>
+      </a>
+      <a href="../ligas/jugadores.html" style="text-decoration:none">
+        <div style="background:#fff;border:1.5px solid var(--borde);border-radius:14px;padding:14px 12px;text-align:center">
+          <div style="font-size:28px;margin-bottom:5px">👥</div>
+          <div style="font-size:12px;font-weight:800;color:var(--texto)">Jugadores</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Ligas activas -->
+    <div class="sec-label" style="margin-bottom:8px">Ligas en curso</div>
+    <div id="ligas-activas-wrap"></div>
+
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/config.js"></script>
+<script src="../ligas/js/store-liga.js"></script>
+<script src="../ligas/js/ui.js"></script>
+<script>
+async function init() {
+  renderHeader({ subtitulo:'Gestión de ligas', botonDerecho: 'menu' });
+  renderNav('inicio');
+  const ok = await lpInit(); if (!ok) return;
+
+  // Alertas pendientes
+  const ligas = await lpGetLigas();
+  const wrap = document.getElementById('alertas-wrap');
+  let htmlAlertas = '';
+  for (const liga of ligas.filter(l => l.estado === 'activa').slice(0,3)) {
+    const { data: p } = await _sb.from('lp_partidos').select('id',{count:'exact'}).eq('liga_id',liga.id).eq('estado','pendiente');
+    const n = p?.length || 0;
+    if (n > 0) htmlAlertas += `
+      <div style="background:#eff6ff;border-left:3px solid var(--azul);border-radius:12px;padding:10px 13px;margin-bottom:7px;cursor:pointer"
+           onclick="window.location.href='../ligas/liga.html?id=${liga.id}&tab=resultados'">
+        <div style="font-size:12px;font-weight:800;color:#1e40af">${n} resultado${n!==1?'s':''} sin anotar</div>
+        <div style="font-size:10px;font-weight:600;color:var(--sutil);margin-top:2px">${liga.nombre}</div>
+      </div>`;
+  }
+  wrap.innerHTML = htmlAlertas;
+
+  // Ligas activas
+  const activas = ligas.filter(l => l.estado === 'activa' || l.estado === 'inscripcion');
+  const ligasWrap = document.getElementById('ligas-activas-wrap');
+  if (!activas.length) {
+    ligasWrap.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--sutil);font-weight:700">Sin ligas activas</div>';
+  } else {
+    ligasWrap.innerHTML = activas.map(l => {
+      const estados = { inscripcion:'Inscripción', activa:'Activa' };
+      const bgBadge = l.estado === 'activa' ? '#dcfce7' : '#dbeafe';
+      const txBadge = l.estado === 'activa' ? '#15803d' : '#1e40af';
+      return `<div style="background:#fff;border:1.5px solid var(--borde);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:10px"
+                   onclick="window.location.href='../ligas/liga.html?id=${l.id}'">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:900;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.nombre}</div>
+          <div style="font-size:10px;font-weight:600;color:var(--sutil);margin-top:3px">${l.categoria||''}</div>
+        </div>
+        <span style="background:${bgBadge};color:${txBadge};border-radius:100px;padding:3px 10px;font-size:10px;font-weight:800;flex-shrink:0">${estados[l.estado]||l.estado}</span>
+      </div>`;
+    }).join('');
+  }
+}
+init();
+</script>
+</body>
+</html>
