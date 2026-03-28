@@ -47,6 +47,37 @@
     .cfg-inp { flex:1; background:#f8fafc; border:1.5px solid var(--borde); border-radius:10px; padding:9px 11px; font-size:13px; font-weight:700; color:var(--texto); outline:none; font-family:inherit; }
     .cfg-inp:focus { border-color:var(--azul); background:var(--card); }
     .cfg-btn-add { background:var(--texto); color:#fff; border:none; border-radius:10px; padding:9px 14px; font-size:12px; font-weight:900; cursor:pointer; white-space:nowrap; font-family:inherit; }
+
+    /* ── Días chips ── */
+    .dias-grid { display:flex; gap:6px; margin-top:4px; }
+    .dia-chip {
+      flex:1; display:flex; align-items:center; justify-content:center;
+      height:40px; border-radius:10px;
+      font-size:11px; font-weight:900; letter-spacing:.2px;
+      border:2px solid var(--borde); background:var(--fondo);
+      color:var(--sutil); cursor:pointer;
+      transition:all .15s; user-select:none; -webkit-tap-highlight-color:transparent;
+    }
+    .dia-chip.activo { background:var(--azul); border-color:var(--azul); color:#fff; }
+
+    /* ── Hora picker custom ── */
+    .hpick-row { display:flex; align-items:center; gap:6px; }
+    .hpick-box {
+      flex:1; display:flex; align-items:center;
+      background:var(--fondo); border:2px solid var(--borde); border-radius:12px; overflow:hidden;
+    }
+    .hpick-btn {
+      background:none; border:none; color:var(--azul);
+      font-size:20px; font-weight:900; padding:0 12px; height:46px;
+      cursor:pointer; font-family:inherit; flex-shrink:0;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .hpick-btn:active { opacity:.6; }
+    .hpick-val {
+      flex:1; text-align:center;
+      font-size:18px; font-weight:900; color:var(--texto); line-height:46px;
+    }
+    .hpick-sep { font-size:20px; font-weight:900; color:var(--sutil); padding:0 2px; }
   </style>
 </head>
 <body>
@@ -116,27 +147,51 @@
         </div>
         <div class="fgrp">
           <div class="flbl">Días</div>
-          <input class="finp" id="gr-dias" placeholder="Ej: Lun / Mié">
+          <div class="dias-grid" id="gr-dias-grid">
+            <div class="dia-chip" data-dia="Lun" onclick="toggleDia(this)">Lun</div>
+            <div class="dia-chip" data-dia="Mar" onclick="toggleDia(this)">Mar</div>
+            <div class="dia-chip" data-dia="Mié" onclick="toggleDia(this)">Mié</div>
+            <div class="dia-chip" data-dia="Jue" onclick="toggleDia(this)">Jue</div>
+            <div class="dia-chip" data-dia="Vie" onclick="toggleDia(this)">Vie</div>
+            <div class="dia-chip" data-dia="Sáb" onclick="toggleDia(this)">Sáb</div>
+            <div class="dia-chip" data-dia="Dom" onclick="toggleDia(this)">Dom</div>
+          </div>
         </div>
       </div>
 
       <!-- Hora inicio -->
       <div class="fgrp">
         <div class="flbl">Hora inicio</div>
-        <div class="hora-row">
-          <select class="fsel" id="gr-inicio-h"></select>
-          <div class="hora-sep">:</div>
-          <select class="fsel" id="gr-inicio-m" style="max-width:75px"></select>
+        <div class="hpick-row">
+          <div class="hpick-box">
+            <button class="hpick-btn" onclick="hpickStep('ini-h',-1)">‹</button>
+            <div class="hpick-val" id="ini-h-val">10</div>
+            <button class="hpick-btn" onclick="hpickStep('ini-h',1)">›</button>
+          </div>
+          <div class="hpick-sep">:</div>
+          <div class="hpick-box">
+            <button class="hpick-btn" onclick="hpickStep('ini-m',-1)">‹</button>
+            <div class="hpick-val" id="ini-m-val">00</div>
+            <button class="hpick-btn" onclick="hpickStep('ini-m',1)">›</button>
+          </div>
         </div>
       </div>
 
       <!-- Hora fin -->
       <div class="fgrp">
         <div class="flbl">Hora fin</div>
-        <div class="hora-row">
-          <select class="fsel" id="gr-fin-h"></select>
-          <div class="hora-sep">:</div>
-          <select class="fsel" id="gr-fin-m" style="max-width:75px"></select>
+        <div class="hpick-row">
+          <div class="hpick-box">
+            <button class="hpick-btn" onclick="hpickStep('fin-h',-1)">‹</button>
+            <div class="hpick-val" id="fin-h-val">11</div>
+            <button class="hpick-btn" onclick="hpickStep('fin-h',1)">›</button>
+          </div>
+          <div class="hpick-sep">:</div>
+          <div class="hpick-box">
+            <button class="hpick-btn" onclick="hpickStep('fin-m',-1)">‹</button>
+            <div class="hpick-val" id="fin-m-val">30</div>
+            <button class="hpick-btn" onclick="hpickStep('fin-m',1)">›</button>
+          </div>
         </div>
       </div>
 
@@ -206,32 +261,62 @@ let _cfgPistas    = [];
 let _cfgMonitores = [];
 let _cfgNiveles   = ['Principiante', 'Intermedio', 'Avanzado'];
 
-// ── Hora picker ────────────────────────────────
-function buildHoraPickers() {
-  const horas   = Array.from({length:16}, (_,i) => String(i+7).padStart(2,'0'));   // 07..22
-  const minutos = Array.from({length:12}, (_,i) => String(i*5).padStart(2,'0'));   // 00,05..55
+// ── Hora picker custom ─────────────────────────
+const _hpick = {
+  'ini-h': { val: 10, min: 7,  max: 22, step: 1  },
+  'ini-m': { val: 0,  min: 0,  max: 55, step: 5  },
+  'fin-h': { val: 11, min: 7,  max: 22, step: 1  },
+  'fin-m': { val: 30, min: 0,  max: 55, step: 5  },
+};
 
-  ['gr-inicio-h','gr-fin-h'].forEach(id => {
-    const sel = document.getElementById(id);
-    sel.innerHTML = horas.map(h => `<option value="${h}">${h}</option>`).join('');
-  });
-  ['gr-inicio-m','gr-fin-m'].forEach(id => {
-    const sel = document.getElementById(id);
-    sel.innerHTML = minutos.map(m => `<option value="${m}">${m}</option>`).join('');
-  });
+function hpickStep(id, dir) {
+  const cfg = _hpick[id];
+  cfg.val = cfg.val + dir * cfg.step;
+  if (cfg.val > cfg.max) cfg.val = cfg.min;
+  if (cfg.val < cfg.min) cfg.val = cfg.max;
+  document.getElementById(id + '-val').textContent = String(cfg.val).padStart(2, '0');
 }
 
+function buildHoraPickers() { /* no-op: pickers ya están en el HTML */ }
+
 function getHora(prefijo) {
-  const h = document.getElementById(prefijo+'-h').value;
-  const m = document.getElementById(prefijo+'-m').value;
+  const mapId = prefijo === 'gr-inicio' ? 'ini' : 'fin';
+  const h = String(_hpick[mapId + '-h'].val).padStart(2, '0');
+  const m = String(_hpick[mapId + '-m'].val).padStart(2, '0');
   return `${h}:${m}`;
 }
 
 function setHora(prefijo, horaStr) {
+  const mapId = prefijo === 'gr-inicio' ? 'ini' : 'fin';
   if (!horaStr) return;
-  const [h, m] = horaStr.split(':');
-  document.getElementById(prefijo+'-h').value = h?.padStart(2,'0') || '10';
-  document.getElementById(prefijo+'-m').value = m?.padStart(2,'0').slice(0,2) || '00';
+  const [h, m] = horaStr.split(':').map(Number);
+  _hpick[mapId + '-h'].val = isNaN(h) ? (mapId === 'ini' ? 10 : 11) : Math.max(7, Math.min(22, h));
+  _hpick[mapId + '-m'].val = isNaN(m) ? 0 : Math.round(m / 5) * 5;
+  document.getElementById(mapId + '-h-val').textContent = String(_hpick[mapId + '-h'].val).padStart(2, '0');
+  document.getElementById(mapId + '-m-val').textContent = String(_hpick[mapId + '-m'].val).padStart(2, '0');
+}
+
+// ── Días chips ────────────────────────────────
+function toggleDia(el) {
+  el.classList.toggle('activo');
+}
+
+function getDias() {
+  return [...document.querySelectorAll('#gr-dias-grid .dia-chip.activo')]
+    .map(el => el.dataset.dia).join(' / ');
+}
+
+function setDias(diasStr) {
+  document.querySelectorAll('#gr-dias-grid .dia-chip').forEach(el => {
+    el.classList.remove('activo');
+  });
+  if (!diasStr) return;
+  const activos = diasStr.split(/[/,;]+/).map(d => d.trim().toLowerCase());
+  document.querySelectorAll('#gr-dias-grid .dia-chip').forEach(el => {
+    if (activos.some(d => el.dataset.dia.toLowerCase().startsWith(d.slice(0,2)))) {
+      el.classList.add('activo');
+    }
+  });
 }
 
 // ── Selectores custom (csel) ───────────────────
@@ -386,7 +471,7 @@ function abrirNuevo() {
   document.getElementById('sh-titulo').textContent = 'Nuevo grupo';
   document.getElementById('gr-id').value     = '';
   document.getElementById('gr-nombre').value = '';
-  document.getElementById('gr-dias').value   = '';
+  setDias('');
   document.getElementById('gr-importe').value= '0';
   setHora('gr-inicio', '10:00');
   setHora('gr-fin',    '11:30');
@@ -398,7 +483,7 @@ function abrirEditar(g) {
   document.getElementById('sh-titulo').textContent = 'Editar grupo';
   document.getElementById('gr-id').value      = g.id;
   document.getElementById('gr-nombre').value  = g.nombre;
-  document.getElementById('gr-dias').value    = g.dias    || '';
+  setDias(g.dias || '');
   document.getElementById('gr-importe').value = g.importe_mensual != null ? g.importe_mensual : '0';
   setHora('gr-inicio', g.hora_inicio || '10:00');
   setHora('gr-fin',    g.hora_fin    || '11:30');
@@ -418,7 +503,7 @@ async function guardar() {
     id:               document.getElementById('gr-id').value || undefined,
     nombre,
     nivel:            cselGetValue('gr-nivel-csel'),
-    dias:             document.getElementById('gr-dias').value.trim(),
+    dias:             getDias(),
     hora_inicio:      getHora('gr-inicio'),
     hora_fin:         getHora('gr-fin'),
     pista:            (() => { const v = cselGetValue('gr-pista-csel'); return v === '— Sin pista —' ? '' : v; })(),
