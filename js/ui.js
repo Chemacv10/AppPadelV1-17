@@ -404,16 +404,32 @@ const UI = {
       <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:16px 15px 32px;max-height:85vh;overflow-y:auto">
         <div style="width:36px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 14px"></div>
         <div style="font-size:17px;font-weight:900;color:#1e293b;margin-bottom:14px">⚡ Generar cobros del mes</div>
+        <style>
+          .gc-sel-wrap{position:relative;flex:1}
+          .gc-sel-trigger{display:flex;align-items:center;justify-content:space-between;background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:700;color:#1e3a8a;cursor:pointer;-webkit-tap-highlight-color:transparent}
+          .gc-sel-trigger.open{border-color:#2563eb}
+          .gc-sel-arrow{font-size:12px;color:#2563eb;font-weight:900}
+          .gc-sel-drop{position:absolute;top:calc(100% + 4px);left:0;min-width:100%;width:max-content;z-index:700;background:#fff;border:2px solid #2563eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.13);max-height:200px;overflow-y:auto;display:none}
+          .gc-sel-drop.open{display:block}
+          .gc-sel-opt{padding:10px 14px;font-size:13px;font-weight:700;color:#1e293b;cursor:pointer}
+          .gc-sel-opt.sel{color:#2563eb;background:#eff6ff}
+        </style>
         <div style="display:flex;gap:8px;margin-bottom:12px">
-          <div style="flex:1">
+          <div class="gc-sel-wrap">
             <div style="font-size:10px;font-weight:900;color:#2563eb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Mes</div>
-            <select id="gc-mes" style="width:100%;background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:700;color:#1e3a8a;outline:none;font-family:Nunito,sans-serif;appearance:none">
-              ${['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'].map(m=>`<option>${m}</option>`).join('')}
-            </select>
+            <div class="gc-sel-trigger" id="gc-mes-trig" onclick="gcSelToggle('gc-mes')">
+              <span id="gc-mes-lbl">—</span><span class="gc-sel-arrow">∨</span>
+            </div>
+            <div class="gc-sel-drop" id="gc-mes-drop">
+              ${['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'].map((m,i)=>`<div class="gc-sel-opt" data-v="${m}" onclick="gcSelPick('gc-mes','${m}')">${m}</div>`).join('')}
+            </div>
           </div>
-          <div style="flex:1">
+          <div class="gc-sel-wrap">
             <div style="font-size:10px;font-weight:900;color:#2563eb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Año</div>
-            <select id="gc-anio" style="width:100%;background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:700;color:#1e3a8a;outline:none;font-family:Nunito,sans-serif;appearance:none"></select>
+            <div class="gc-sel-trigger" id="gc-anio-trig" onclick="gcSelToggle('gc-anio')">
+              <span id="gc-anio-lbl">—</span><span class="gc-sel-arrow">∨</span>
+            </div>
+            <div class="gc-sel-drop" id="gc-anio-drop"></div>
           </div>
         </div>
         <div id="gc-preview-btn">
@@ -490,39 +506,82 @@ let _gcPreviewData = null;
 
 function _gcInicializar() {
   const anio = new Date().getFullYear();
-  const sel = document.getElementById('gc-anio');
-  if (sel) {
-    sel.innerHTML = [anio-1, anio, anio+1].map(a=>`<option value="${a}" ${a===anio?'selected':''}>${a}</option>`).join('');
+  const mesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][new Date().getMonth()];
+
+  // Poblar año
+  const drop = document.getElementById('gc-anio-drop');
+  if (drop) {
+    drop.innerHTML = [anio-1, anio, anio+1].map(a=>`<div class="gc-sel-opt${a===anio?' sel':''}" data-v="${a}" onclick="gcSelPick('gc-anio',${a})">${a}</div>`).join('');
   }
-  const mes = document.getElementById('gc-mes');
-  if (mes) mes.value = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][new Date().getMonth()];
+  const lblA = document.getElementById('gc-anio-lbl');
+  if (lblA) lblA.textContent = anio;
+
+  // Mes actual
+  const lblM = document.getElementById('gc-mes-lbl');
+  if (lblM) lblM.textContent = mesNombre;
+  const mesOpts = document.querySelectorAll('#gc-mes-drop .gc-sel-opt');
+  mesOpts.forEach(o => o.classList.toggle('sel', o.dataset.v === mesNombre));
+
   document.getElementById('gc-resultado').style.display = 'none';
   document.getElementById('gc-preview-btn').style.display = 'block';
   _gcPreviewData = null;
 }
 
+function gcSelToggle(id) {
+  const drop = document.getElementById(id + '-drop');
+  const trig = document.getElementById(id + '-trig');
+  if (!drop) return;
+  const open = drop.classList.contains('open');
+  // Cerrar todos
+  document.querySelectorAll('.gc-sel-drop').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.gc-sel-trigger').forEach(t => t.classList.remove('open'));
+  if (!open) {
+    drop.classList.add('open'); trig.classList.add('open');
+    setTimeout(() => { const s = drop.querySelector('.sel'); if (s) s.scrollIntoView({block:'center'}); }, 20);
+  }
+}
+function gcSelPick(id, val) {
+  const lbl = document.getElementById(id + '-lbl');
+  const drop = document.getElementById(id + '-drop');
+  const trig = document.getElementById(id + '-trig');
+  if (lbl) lbl.textContent = val;
+  if (drop) { drop.querySelectorAll('.gc-sel-opt').forEach(o => o.classList.toggle('sel', String(o.dataset.v) === String(val))); drop.classList.remove('open'); }
+  if (trig) trig.classList.remove('open');
+}
+
 async function _gcCalcular() {
-  const mes  = document.getElementById('gc-mes').value;
-  const anio = +document.getElementById('gc-anio').value;
+  const mes  = document.getElementById('gc-mes-lbl')?.textContent || '';
+  const anio = +(document.getElementById('gc-anio-lbl')?.textContent || new Date().getFullYear());
   document.getElementById('gc-preview-btn').innerHTML = '<div style="text-align:center;padding:10px"><div style="width:20px;height:20px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block"></div></div>';
 
   try {
     const grupos = await getGruposConImporte();
     if (!grupos.length) {
-      toast('Ningún grupo tiene importe mensual configurado', 'warn');
-      document.getElementById('gc-preview-btn').innerHTML = '<button onclick="UI._gcCalcular()" style="width:100%;padding:12px;border-radius:12px;background:#2563eb;color:#fff;border:none;font-size:13px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif">🔍 Calcular preview</button>';
+      document.getElementById('gc-preview-btn').innerHTML = \`
+        <div style="background:#fef9c3;border:1.5px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px">
+          ⚠️ Ningún grupo tiene importe mensual configurado.<br>
+          <span style="font-size:11px;color:#b45309">Ve a <strong>Grupos → Editar</strong> y añade un importe mensual.</span>
+        </div>
+        <button onclick="UI._gcCalcular()" style="width:100%;padding:12px;border-radius:12px;background:#2563eb;color:#fff;border:none;font-size:13px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif">🔍 Calcular preview</button>
+      \`;
       return;
     }
     const grupoIds = grupos.map(g => g.id);
-    const { data: alumnos } = await _sb.from('alumnos').select('id,nombre,grupo_id').in('grupo_id', grupoIds).eq('escuela_id', Store.escuelaId);
+    // La relación alumno↔grupo es N:M a través de alumno_grupos
+    const { data: relaciones } = await _sb
+      .from('alumno_grupos')
+      .select('alumno_id, grupo_id, alumnos(id, nombre)')
+      .in('grupo_id', grupoIds);
     const yaExisten = await getCobrosExistentesSet(mes, anio);
 
     const aGenerar = [], omitidos = [];
-    (alumnos||[]).forEach(a => {
-      const g = grupos.find(x => x.id === a.grupo_id);
+    (relaciones||[]).forEach(r => {
+      const alumno = r.alumnos;
+      if (!alumno) return;
+      const g = grupos.find(x => x.id === r.grupo_id);
       if (!g) return;
-      if (yaExisten.has(a.id)) omitidos.push({...a, grupo: g});
-      else aGenerar.push({ alumno_id: a.id, nombre: a.nombre, grupo: g, importe: g.importe_mensual });
+      if (yaExisten.has(alumno.id)) omitidos.push({...alumno, grupo: g});
+      else aGenerar.push({ alumno_id: alumno.id, nombre: alumno.nombre, grupo: g, importe: g.importe_mensual });
     });
     _gcPreviewData = { aGenerar, mes, anio };
 
