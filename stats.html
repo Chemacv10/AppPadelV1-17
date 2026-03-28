@@ -44,7 +44,13 @@
       padding:5px 26px 5px 10px; font-size:12px; font-weight:800; color:var(--texto);
       outline:none; cursor:pointer; font-family:Nunito,sans-serif;
     }
-    .anio-sel:focus { border-color:var(--azul); }
+    /* anio picker custom */
+    .anio-wrap{position:relative;display:inline-block}
+    .anio-trigger{display:inline-flex;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .anio-drop{position:absolute;top:calc(100% + 4px);left:0;min-width:90px;width:max-content;z-index:300;background:var(--card);border:2px solid var(--azul);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.13);overflow:hidden;display:none}
+    .anio-drop.open{display:block}
+    .anio-opt{padding:9px 0;font-size:13px;font-weight:800;color:var(--texto);text-align:center;cursor:pointer}
+    .anio-opt.sel{color:var(--azul);background:#eff6ff}
   </style>
 </head>
 <body>
@@ -454,7 +460,14 @@ function renderCobros() {
       ${secHdr('icons/mensual.png','Cobrado por mes')}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div class="filter-label" style="margin:0">Año</div>
-        <select class="fsel" style="flex:0 0 auto;width:auto;padding:6px 28px 6px 10px;font-size:12px" onchange="_aniosCobros=+this.value;renderStats()">${anioOpts}</select>
+        <div class="anio-wrap" style="display:inline-block">
+          <div class="anio-trigger" id="st-anio-trigger" onclick="stAnioToggle()" style="background:#f1f5f9;border:1.5px solid var(--borde);border-radius:9px;padding:5px 12px;font-size:12px;font-weight:900;color:var(--texto);cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:Nunito,sans-serif">
+            <span id="st-anio-lbl">${_aniosCobros}</span><span style="font-size:10px;color:var(--azul);font-weight:900">∨</span>
+          </div>
+          <div class="anio-drop" id="st-anio-drop" style="min-width:90px">
+            ${aniosDisp.map(a=>`<div class="anio-opt${a===_aniosCobros?' sel':''}" onclick="stAnioPick(${a})">${a}</div>`).join('')}
+          </div>
+        </div>
       </div>
       <div style="display:flex;align-items:flex-end;gap:3px;height:80px;padding-bottom:4px">
         ${mesItems.map(({lbl,val})=>{
@@ -760,6 +773,9 @@ function abrirInfo() {
 }
 
 init();
+function stAnioToggle(){const d=document.getElementById('st-anio-drop');const t=document.getElementById('st-anio-trigger');if(!d)return;const open=d.classList.contains('open');d.classList.toggle('open',!open);t&&t.classList.toggle('open',!open);}
+function stAnioPick(v){_aniosCobros=v;const d=document.getElementById('st-anio-drop');const t=document.getElementById('st-anio-trigger');const l=document.getElementById('st-anio-lbl');if(d)d.classList.remove('open');if(t)t.classList.remove('open');renderStats();}
+document.addEventListener('click',e=>{if(!e.target.closest('.anio-wrap')){document.querySelectorAll('.anio-drop').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.anio-trigger').forEach(t=>t.classList.remove('open'));}});
 </script>
 </body>
 </html>

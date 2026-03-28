@@ -38,8 +38,14 @@
     .fbtn.active{background:var(--azul);border-color:var(--azul);color:#fff}
 
     .anio-nav{display:flex;align-items:center;justify-content:center;padding:6px 0}
-    .anio-sel{appearance:none;background:#f1f5f9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 11px center;border:1.5px solid var(--borde);border-radius:10px;padding:7px 30px 7px 14px;font-size:14px;font-weight:900;color:var(--texto);outline:none;cursor:pointer;font-family:Nunito,sans-serif;min-width:100px;text-align:center}
-    .anio-sel:focus{border-color:var(--azul)}
+    .anio-wrap{position:relative;display:inline-block;min-width:110px}
+    .anio-trigger{display:flex;align-items:center;justify-content:center;gap:7px;background:#f1f5f9;border:1.5px solid var(--borde);border-radius:10px;padding:7px 14px;font-size:14px;font-weight:900;color:var(--texto);cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:Nunito,sans-serif}
+    .anio-trigger.open{border-color:var(--azul)}
+    .anio-arrow{font-size:12px;color:var(--azul);font-weight:900}
+    .anio-drop{position:absolute;top:calc(100% + 4px);left:0;min-width:100%;width:max-content;z-index:300;background:var(--card);border:2px solid var(--azul);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.13);overflow:hidden;display:none}
+    .anio-drop.open{display:block}
+    .anio-opt{padding:10px 0;font-size:14px;font-weight:800;color:var(--texto);text-align:center;cursor:pointer}
+    .anio-opt.sel{color:var(--azul);background:#eff6ff}
 
     .tipos-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:10px}
     .tipos-row::-webkit-scrollbar{display:none}
@@ -70,7 +76,13 @@
     <div class="kpi-row" id="kpi-row"></div>
 
     <div class="anio-nav">
-      <select class="anio-sel" id="anio-sel" onchange="cambiarAnio(+this.value)"></select>
+      <div class="anio-wrap" id="anio-wrap">
+        <div class="anio-trigger" id="anio-trigger" onclick="anioToggle()">
+          <span id="anio-lbl">—</span>
+          <span class="anio-arrow">∨</span>
+        </div>
+        <div class="anio-drop" id="anio-drop"></div>
+      </div>
     </div>
 
     <div class="modo-tabs">
@@ -246,16 +258,36 @@ function setTab(tab) {
 }
 
 // ── Año ───────────────────────────────────────
-function poblarAnioSel() {
-  const base = new Date().getFullYear();
-  const anios = [...new Set([..._cobros.map(c=>c.fecha?new Date(c.fecha).getFullYear():null).filter(Boolean), base-1, base, base+1])].sort((a,b)=>b-a);
-  const selMain = document.getElementById('anio-sel');
-  const selGen  = document.getElementById('gen-anio');
-  const opts = anios.map(a=>`<option value="${a}" ${a===_anio?'selected':''}>${a}</option>`).join('');
-  selMain.innerHTML = opts;
-  selGen.innerHTML  = opts;
+function poblarAnioSel(){
+  const anios=[..._cobros.reduce((s,co)=>{const a=new Date(co.fecha||0).getFullYear();if(a>2000)s.add(a);return s;},new Set())].sort((a,b)=>b-a);
+  const anioAct=_anioActual||(anios[0]||new Date().getFullYear());
+  const lbl=document.getElementById('anio-lbl');
+  const drop=document.getElementById('anio-drop');
+  if(lbl)lbl.textContent=anioAct;
+  if(drop)drop.innerHTML=anios.map(a=>`<div class="anio-opt${a===anioAct?' sel':''}" onclick="anioPick(${a})">${a}</div>`).join('');
+  // Sincronizar referencia interna
+  const sel=document.getElementById('anio-sel');
+  if(sel){sel.innerHTML=anios.map(a=>`<option value="${a}" ${a===anioAct?'selected':''}>${a}</option>`).join('');sel.value=anioAct;}
 }
-
+function anioToggle(){
+  const drop=document.getElementById('anio-drop');
+  const trig=document.getElementById('anio-trigger');
+  if(!drop)return;
+  const open=drop.classList.contains('open');
+  drop.classList.toggle('open',!open);
+  trig.classList.toggle('open',!open);
+}
+function anioPick(v){
+  const drop=document.getElementById('anio-drop');
+  const trig=document.getElementById('anio-trigger');
+  const lbl=document.getElementById('anio-lbl');
+  if(drop)drop.classList.remove('open');
+  if(trig)trig.classList.remove('open');
+  if(lbl)lbl.textContent=v;
+  if(drop)drop.querySelectorAll('.anio-opt').forEach(o=>o.classList.toggle('sel',+o.textContent===v));
+  cambiarAnio(v);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.anio-wrap')){const d=document.getElementById('anio-drop');const t=document.getElementById('anio-trigger');if(d)d.classList.remove('open');if(t)t.classList.remove('open');}});
 function cambiarAnio(v) {
   _anio=v; _mesSelec=null;
   renderKPIs(); renderMeses(); renderDetalleMes();

@@ -74,9 +74,11 @@
     }
     .hpick-btn:active { opacity:.6; }
     .hpick-val {
-      flex:1; text-align:center;
-      font-size:18px; font-weight:900; color:var(--texto); line-height:46px;
+      flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+      font-size:18px; font-weight:900; color:var(--texto); height:46px;
+      -webkit-tap-highlight-color:transparent; user-select:none;
     }
+    .hpick-val-arrow { font-size:13px; color:var(--azul); font-weight:900; }
     .hpick-sep { font-size:20px; font-weight:900; color:var(--sutil); padding:0 2px; }
     .hpick-wrap { flex:1; position:relative; }
     .hpick-box { cursor:pointer; }
@@ -182,7 +184,7 @@
           <div class="hpick-wrap">
             <div class="hpick-box" id="ini-h-box">
               <button class="hpick-btn" onclick="hpickStep('ini-h',-1)">‹</button>
-              <div class="hpick-val" id="ini-h-val" onclick="hpickToggle('ini-h')">10</div>
+              <div class="hpick-val" id="ini-h-val" onclick="hpickToggle('ini-h')">10<span class="hpick-val-arrow">∨</span></div>
               <button class="hpick-btn" onclick="hpickStep('ini-h',1)">›</button>
             </div>
             <div class="hpick-drop" id="ini-h-drop"></div>
@@ -191,7 +193,7 @@
           <div class="hpick-wrap">
             <div class="hpick-box" id="ini-m-box">
               <button class="hpick-btn" onclick="hpickStep('ini-m',-1)">‹</button>
-              <div class="hpick-val" id="ini-m-val" onclick="hpickToggle('ini-m')">00</div>
+              <div class="hpick-val" id="ini-m-val" onclick="hpickToggle('ini-m')">00<span class="hpick-val-arrow">∨</span></div>
               <button class="hpick-btn" onclick="hpickStep('ini-m',1)">›</button>
             </div>
             <div class="hpick-drop" id="ini-m-drop"></div>
@@ -206,7 +208,7 @@
           <div class="hpick-wrap">
             <div class="hpick-box" id="fin-h-box">
               <button class="hpick-btn" onclick="hpickStep('fin-h',-1)">‹</button>
-              <div class="hpick-val" id="fin-h-val" onclick="hpickToggle('fin-h')">11</div>
+              <div class="hpick-val" id="fin-h-val" onclick="hpickToggle('fin-h')">11<span class="hpick-val-arrow">∨</span></div>
               <button class="hpick-btn" onclick="hpickStep('fin-h',1)">›</button>
             </div>
             <div class="hpick-drop" id="fin-h-drop"></div>
@@ -215,7 +217,7 @@
           <div class="hpick-wrap">
             <div class="hpick-box" id="fin-m-box">
               <button class="hpick-btn" onclick="hpickStep('fin-m',-1)">‹</button>
-              <div class="hpick-val" id="fin-m-val" onclick="hpickToggle('fin-m')">30</div>
+              <div class="hpick-val" id="fin-m-val" onclick="hpickToggle('fin-m')">30<span class="hpick-val-arrow">∨</span></div>
               <button class="hpick-btn" onclick="hpickStep('fin-m',1)">›</button>
             </div>
             <div class="hpick-drop" id="fin-m-drop"></div>
@@ -298,7 +300,8 @@ const _hpick = {
 };
 
 function _hpickRender(id) {
-  document.getElementById(id + '-val').textContent = String(_hpick[id].val).padStart(2, '0');
+  const el = document.getElementById(id + '-val');
+  if (el) el.innerHTML = String(_hpick[id].val).padStart(2, '0') + '<span class="hpick-val-arrow">∨</span>';
 }
 
 function hpickStep(id, dir) {

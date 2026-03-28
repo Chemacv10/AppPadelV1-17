@@ -35,8 +35,19 @@
     .estado-btn.sel-Suspendida{border-color:var(--rojo);background:#fee2e2;color:#dc2626}
     .estado-btn.sel-Festivo{border-color:var(--naranja);background:#fef9c3;color:#92400e}
     .hora-row{display:flex;gap:5px;align-items:center}
-    .hora-row .fsel{flex:1}
     .hora-sep{font-size:14px;font-weight:900;color:var(--sutil)}
+    /* hpick */
+    .hpick-wrap{flex:1;position:relative}
+    .hpick-box{display:flex;align-items:center;background:var(--fondo);border:2px solid var(--borde);border-radius:12px;overflow:hidden;cursor:pointer}
+    .hpick-box.open{border-color:var(--azul)}
+    .hpick-btn{background:none;border:none;color:var(--azul);font-size:18px;font-weight:900;padding:0 9px;height:42px;cursor:pointer;font-family:inherit;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+    .hpick-btn:active{opacity:.6}
+    .hpick-val{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;font-size:16px;font-weight:900;color:var(--texto);height:42px;user-select:none;-webkit-tap-highlight-color:transparent}
+    .hpick-val-arrow{font-size:11px;color:var(--azul);font-weight:900}
+    .hpick-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:300;background:var(--card);border:2px solid var(--azul);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.13);max-height:190px;overflow-y:auto;display:none}
+    .hpick-drop.open{display:block}
+    .hpick-opt{padding:10px 0;font-size:15px;font-weight:800;color:var(--texto);text-align:center;cursor:pointer}
+    .hpick-opt.sel{color:var(--azul);background:#eff6ff}
     .al-check{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1.5px solid var(--borde);border-radius:11px;margin-bottom:6px;cursor:pointer;transition:all .15s}
     .al-check.checked{border-color:var(--verde);background:#f0fdf4}
     .check-box{width:24px;height:24px;border-radius:7px;border:2px solid var(--borde);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--card)}
@@ -75,9 +86,25 @@
     .bloque-ord-btns{display:flex;gap:4px}
     .btn-ord{width:28px;height:28px;border-radius:8px;border:1.5px solid var(--borde);background:#f8fafc;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub)}
     .btn-del{width:28px;height:28px;border-radius:8px;border:1.5px solid #fca5a5;background:#fff5f5;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--rojo)}
-    .bloque-ej-sel{width:100%;background:#f8fafc;border:1.5px solid var(--borde);border-radius:9px;padding:9px 28px 9px 11px;font-size:13px;font-weight:700;color:var(--texto);outline:none;font-family:inherit;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;margin-bottom:7px}
+    /* bloque custom selects */
+    .bsel-wrap{position:relative;margin-bottom:7px}
+    .bsel-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1.5px solid var(--borde);border-radius:9px;padding:9px 11px;font-size:13px;font-weight:700;color:var(--texto);cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+    .bsel-trigger.open{border-color:var(--azul)}
+    .bsel-lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .bsel-arrow{font-size:11px;color:var(--azul);font-weight:900;margin-left:6px;flex-shrink:0}
+    .bsel-drop{position:absolute;top:calc(100% + 3px);left:0;min-width:100%;width:max-content;z-index:300;background:var(--card);border:2px solid var(--azul);border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.12);max-height:180px;overflow-y:auto;display:none}
+    .bsel-drop.open{display:block}
+    .bsel-opt{padding:9px 12px;font-size:13px;font-weight:700;color:var(--texto);cursor:pointer}
+    .bsel-opt.sel{color:var(--azul);background:#eff6ff}
+    .bdur-wrap{flex:1;position:relative}
+    .bdur-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1.5px solid var(--borde);border-radius:9px;padding:8px 11px;font-size:12px;font-weight:700;color:var(--texto);cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+    .bdur-trigger.open{border-color:var(--azul)}
+    .bdur-drop{position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:300;background:var(--card);border:2px solid var(--azul);border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.12);overflow:hidden;display:none}
+    .bdur-drop.open{display:block}
+    .bdur-opt{padding:9px 12px;font-size:12px;font-weight:700;color:var(--texto);cursor:pointer}
+    .bdur-opt.sel{color:var(--azul);background:#eff6ff}
     .bloque-row{display:flex;align-items:center;gap:8px}
-    .bloque-dur{flex:1;background:#f8fafc;border:1.5px solid var(--borde);border-radius:9px;padding:8px 28px 8px 11px;font-size:12px;font-weight:700;color:var(--texto);outline:none;font-family:inherit;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
     .no-real-lbl{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--sutil);cursor:pointer;flex-shrink:0}
     .no-real-lbl input{accent-color:var(--rojo)}
     .add-bloques{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
@@ -208,9 +235,23 @@
           <div class="fgrp">
             <div class="flbl">Hora</div>
             <div class="hora-row">
-              <select class="fsel" id="cl-hora-h" style="font-size:12px"></select>
+              <div class="hpick-wrap">
+                <div class="hpick-box" id="cl-h-box">
+                  <button class="hpick-btn" onclick="hpickStep('cl-h',-1)">‹</button>
+                  <div class="hpick-val" id="cl-h-val" onclick="hpickToggle('cl-h')">10<span class="hpick-val-arrow">∨</span></div>
+                  <button class="hpick-btn" onclick="hpickStep('cl-h',1)">›</button>
+                </div>
+                <div class="hpick-drop" id="cl-h-drop"></div>
+              </div>
               <div class="hora-sep">:</div>
-              <select class="fsel" id="cl-hora-m" style="max-width:68px;font-size:12px"></select>
+              <div class="hpick-wrap">
+                <div class="hpick-box" id="cl-m-box">
+                  <button class="hpick-btn" onclick="hpickStep('cl-m',-1)">‹</button>
+                  <div class="hpick-val" id="cl-m-val" onclick="hpickToggle('cl-m')">00<span class="hpick-val-arrow">∨</span></div>
+                  <button class="hpick-btn" onclick="hpickStep('cl-m',1)">›</button>
+                </div>
+                <div class="hpick-drop" id="cl-m-drop"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -406,12 +447,14 @@ const ICONO_CAT={Calentamiento:'icons/calentamiento.png',Carritos:'icons/carrito
 const CATS=['Calentamiento','Carritos','Situaciones','Partiditos'];
 const ESTADOS_SIMPLES=['Suspendida','Festivo'];
 
-function buildHoraPickers(){
-  const horas=Array.from({length:16},(_,i)=>String(i+7).padStart(2,'0'));
-  const mins=Array.from({length:12},(_,i)=>String(i*5).padStart(2,'0'));
-  document.getElementById('cl-hora-h').innerHTML=horas.map(h=>`<option value="${h}">${h}</option>`).join('');
-  document.getElementById('cl-hora-m').innerHTML=mins.map(m=>`<option value="${m}">${m}</option>`).join('');
-}
+// ── Hora picker clases ──
+const _hpick={'cl-h':{val:10,opts:Array.from({length:24},(_,i)=>i),step:1},'cl-m':{val:0,opts:Array.from({length:12},(_,i)=>i*5),step:5}};
+function _hpickRender(id){const el=document.getElementById(id+'-val');if(el)el.innerHTML=String(_hpick[id].val).padStart(2,'0')+'<span class="hpick-val-arrow">\u2228</span>';}
+function hpickStep(id,dir){const cfg=_hpick[id];const idx=cfg.opts.indexOf(cfg.val);cfg.val=cfg.opts[(idx+dir+cfg.opts.length)%cfg.opts.length];_hpickRender(id);const drop=document.getElementById(id+'-drop');if(drop&&drop.classList.contains('open'))drop.querySelectorAll('.hpick-opt').forEach(o=>o.classList.toggle('sel',Number(o.dataset.v)===cfg.val));}
+function hpickToggle(id){const drop=document.getElementById(id+'-drop');const box=document.getElementById(id+'-box');const isOpen=drop.classList.contains('open');document.querySelectorAll('.hpick-drop').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.hpick-box').forEach(b=>b.classList.remove('open'));if(!isOpen){const cfg=_hpick[id];drop.innerHTML=cfg.opts.map(v=>`<div class="hpick-opt${v===cfg.val?' sel':''}" data-v="${v}" onclick="hpickPick('${id}',${v})">${String(v).padStart(2,'0')}</div>`).join('');drop.classList.add('open');box.classList.add('open');setTimeout(()=>{const s=drop.querySelector('.sel');if(s)s.scrollIntoView({block:'center'});},20);}}
+function hpickPick(id,val){_hpick[id].val=val;_hpickRender(id);document.getElementById(id+'-drop').classList.remove('open');document.getElementById(id+'-box').classList.remove('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.hpick-wrap')){document.querySelectorAll('.hpick-drop').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.hpick-box').forEach(b=>b.classList.remove('open'));}});
+function buildHoraPickers(){/* no-op */}
 function fillTipoClaseSelect(val) {
   cselRender(
     'cl-tipo-csel',
@@ -424,8 +467,8 @@ function fillTipoClaseSelect(val) {
   );
 }
 
-function getHora(){return document.getElementById('cl-hora-h').value+':'+document.getElementById('cl-hora-m').value}
-function setHora(s){if(!s)return;const[h,m]=s.split(':');document.getElementById('cl-hora-h').value=h?.padStart(2,'0')||'10';document.getElementById('cl-hora-m').value=(m?.slice(0,2)||'00').padStart(2,'0')}
+function getHora(){return String(_hpick['cl-h'].val).padStart(2,'0')+':'+String(_hpick['cl-m'].val).padStart(2,'0')}
+function setHora(s){if(!s)return;const[h,m]=s.split(':').map(Number);_hpick['cl-h'].val=isNaN(h)?10:Math.min(23,Math.max(0,h));_hpick['cl-m'].val=isNaN(m)?0:Math.round(m/5)*5%60;_hpickRender('cl-h');_hpickRender('cl-m');}
 
 function filtrar(){
   const q=(document.getElementById('buscador')?.value||'').toLowerCase().trim();
@@ -718,15 +761,28 @@ function crearBloqueEl(b,idx){
       </div>
     </div>
     <div class="bloque-ej-row">
-      <select class="bloque-ej-sel" onchange="_bloques[${idx}].ejercicio_id=this.value;_bloques[${idx}].nombre=this.options[this.selectedIndex].text;_bloques[${idx}].ejercicio_id&&actualizarBtnInfo(${idx},this.value)">
-        <option value="">Selecciona ejercicio…</option>${opts}
-      </select>
+      <div class="bsel-wrap">
+        <div class="bsel-trigger" id="bsel-trig-${idx}" onclick="bselToggle(${idx})">
+          <span class="bsel-lbl" id="bsel-lbl-${idx}">${b.ejercicio_id?(ejsCat.find(e=>e.id===b.ejercicio_id)?.nombre||'Selecciona ejercicio…'):'Selecciona ejercicio…'}</span>
+          <span class="bsel-arrow">∨</span>
+        </div>
+        <div class="bsel-drop" id="bsel-drop-${idx}">
+          <div class="bsel-opt${!b.ejercicio_id?' sel':''}" onclick="bselPick(${idx},'','')">Selecciona ejercicio…</div>
+          ${ejsCat.map(e=>`<div class="bsel-opt${e.id===b.ejercicio_id?' sel':''}" onclick="bselPick(${idx},'${e.id.replace(/'/g,"\\'")}','${e.nombre.replace(/'/g,"\\'")}\u0027)">${e.nombre}</div>`).join('')}
+        </div>
+      </div>
       <button class="btn-info-ej" id="btn-info-${idx}" onclick="mostrarInfoEj(${idx})" title="Ver descripción">ℹ</button>
     </div>
     <div class="bloque-row">
-      <select class="bloque-dur" onchange="_bloques[${idx}].duracion=this.value">
-        ${['5 min','10 min','15 min','20 min','25 min','30 min','45 min'].map(d=>`<option ${d===b.duracion?'selected':''}>${d}</option>`).join('')}
-      </select>
+      <div class="bdur-wrap">
+        <div class="bdur-trigger" id="bdur-trig-${idx}" onclick="bdurToggle(${idx})">
+          <span id="bdur-lbl-${idx}">${b.duracion||'10 min'}</span>
+          <span class="bsel-arrow">∨</span>
+        </div>
+        <div class="bdur-drop" id="bdur-drop-${idx}">
+          ${['5 min','10 min','15 min','20 min','25 min','30 min','45 min'].map(d=>`<div class="bdur-opt${d===(b.duracion||'10 min')?' sel':''}" onclick="bdurPick(${idx},'${d}')">${d}</div>`).join('')}
+        </div>
+      </div>
       <label class="no-real-lbl"><input type="checkbox" ${!b.realizado?'checked':''} onchange="_bloques[${idx}].realizado=!this.checked"> No realizado</label>
     </div>`;
   return div;
@@ -974,6 +1030,51 @@ function abrirInfo() {
 }
 
 init();
+
+function bselToggle(idx){
+  const drop=document.getElementById('bsel-drop-'+idx);
+  const trig=document.getElementById('bsel-trig-'+idx);
+  if(!drop)return;
+  const open=drop.classList.contains('open');
+  document.querySelectorAll('.bsel-drop').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.bsel-trigger').forEach(t=>t.classList.remove('open'));
+  if(!open){drop.classList.add('open');trig.classList.add('open');
+    setTimeout(()=>{const s=drop.querySelector('.sel');if(s)s.scrollIntoView({block:'nearest'});},20);}
+}
+function bselPick(idx,id,nombre){
+  _bloques[idx].ejercicio_id=id;_bloques[idx].nombre=nombre;
+  const lbl=document.getElementById('bsel-lbl-'+idx);
+  if(lbl)lbl.textContent=nombre||'Selecciona ejercicio…';
+  const drop=document.getElementById('bsel-drop-'+idx);
+  const trig=document.getElementById('bsel-trig-'+idx);
+  if(drop){drop.querySelectorAll('.bsel-opt').forEach(o=>o.classList.toggle('sel',o.textContent.trim()===nombre||(!id&&o.dataset.empty)));drop.classList.remove('open');}
+  if(trig)trig.classList.remove('open');
+  if(id)actualizarBtnInfo(idx,id);
+}
+function bdurToggle(idx){
+  const drop=document.getElementById('bdur-drop-'+idx);
+  const trig=document.getElementById('bdur-trig-'+idx);
+  if(!drop)return;
+  const open=drop.classList.contains('open');
+  document.querySelectorAll('.bdur-drop').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.bdur-trigger').forEach(t=>t.classList.remove('open'));
+  if(!open){drop.classList.add('open');trig.classList.add('open');}
+}
+function bdurPick(idx,val){
+  _bloques[idx].duracion=val;
+  const lbl=document.getElementById('bdur-lbl-'+idx);
+  if(lbl)lbl.textContent=val;
+  const drop=document.getElementById('bdur-drop-'+idx);
+  const trig=document.getElementById('bdur-trig-'+idx);
+  if(drop){drop.querySelectorAll('.bdur-opt').forEach(o=>o.classList.toggle('sel',o.textContent.trim()===val));drop.classList.remove('open');}
+  if(trig)trig.classList.remove('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.bsel-wrap')&&!e.target.closest('.bdur-wrap')){
+    document.querySelectorAll('.bsel-drop,.bdur-drop').forEach(d=>d.classList.remove('open'));
+    document.querySelectorAll('.bsel-trigger,.bdur-trigger').forEach(t=>t.classList.remove('open'));
+  }
+});
 </script>
 </body>
 </html>
