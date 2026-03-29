@@ -456,7 +456,7 @@ async function init() {
       _sb.from('semanas_pista').select('*, bloques_pista(*)').eq('escuela_id', Store.escuelaId).order('fecha_inicio'),
       _sb.from('torneos').select('*').eq('escuela_id', Store.escuelaId).order('fecha',{ascending:false}).limit(3),
       ids.length ? _sb.from('partidos').select('pareja_a,pareja_b,resultado_a,resultado_b').in('torneo_id', ids) : { data:[] },
-      _sb.from('alumnos').select('id,grupo_id').eq('escuela_id', Store.escuelaId),
+      _sb.from('alumnos').select('id').eq('escuela_id', Store.escuelaId),
       _sb.from('ejercicios').select('id,nombre,categoria,usos').eq('escuela_id', Store.escuelaId).order('usos',{ascending:false}).limit(5),
       _sb.from('clases').select('id,fecha,estado').eq('escuela_id', Store.escuelaId),
       _sb.from('grupos').select('id,nombre').eq('escuela_id', Store.escuelaId),
