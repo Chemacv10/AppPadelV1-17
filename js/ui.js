@@ -557,13 +557,12 @@ async function _gcCalcular() {
   try {
     const grupos = await getGruposConImporte();
     if (!grupos.length) {
-      document.getElementById('gc-preview-btn').innerHTML = \`
-        <div style="background:#fef9c3;border:1.5px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px">
-          ⚠️ Ningún grupo tiene importe mensual configurado.<br>
-          <span style="font-size:11px;color:#b45309">Ve a <strong>Grupos → Editar</strong> y añade un importe mensual.</span>
-        </div>
-        <button onclick="UI._gcCalcular()" style="width:100%;padding:12px;border-radius:12px;background:#2563eb;color:#fff;border:none;font-size:13px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif">🔍 Calcular preview</button>
-      \`;
+      document.getElementById('gc-preview-btn').innerHTML =
+        '<div style="background:#fef9c3;border:1.5px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px">' +
+        '⚠️ Ningún grupo tiene importe mensual configurado.<br>' +
+        '<span style="font-size:11px;color:#b45309">Ve a <strong>Grupos → Editar</strong> y añade un importe mensual.</span>' +
+        '</div>' +
+        '<button onclick="UI._gcCalcular()" style="width:100%;padding:12px;border-radius:12px;background:#2563eb;color:#fff;border:none;font-size:13px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif">🔍 Calcular preview</button>';
       return;
     }
     const grupoIds = grupos.map(g => g.id);
