@@ -4,6 +4,7 @@
 
 // Módulos de LigaPádel
 const LP_MODULOS = [
+  { id: 'escuela',         label: 'Escuela',    href: '../index.html',              icon: '../icons/inicio.png'            },
   { id: 'inicio',          label: 'Inicio',     href: '../ligas/inicio.html',       icon: '../ligas/icons/inicio-liga.png' },
   { id: 'jugadores-liga',  label: 'Jugadores',  href: '../ligas/jugadores.html',    icon: '../ligas/icons/jugadores.png'   },
   { id: 'ligas',           label: 'Ligas',      href: '../ligas/index.html',        icon: '../ligas/icons/ligas.png'       },
